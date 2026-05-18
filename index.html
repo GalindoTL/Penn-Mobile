@@ -413,8 +413,12 @@ html,body{height:100%;background:var(--bg);overscroll-behavior:none}
       <div class="slbl">Station *</div>
       <div class="st-grid" id="morning-st-grid"></div>
       <div class="err hidden" id="morning-st-err">Please select a station</div>
-      <div class="slbl">Material / Job Running</div>
+      <div class="slbl">Material / Coil</div>
       <textarea class="tinput sm" id="mr-material" placeholder="e.g. 3003 aluminum, 1.5 inch OD..."></textarea>
+      <div class="slbl">Jobs Running (up to 3)</div>
+      <input class="tinput sm" type="text" id="mr-job1" placeholder="Job 1 — Part # or description...">
+      <input class="tinput sm" type="text" id="mr-job2" placeholder="Job 2 — Part # or description..." style="margin-top:6px">
+      <input class="tinput sm" type="text" id="mr-job3" placeholder="Job 3 — Part # or description..." style="margin-top:6px">
       <div class="slbl">Quantities</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
         <div><div class="mr-label" style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px">Job Qty</div><input class="numinput" type="number" id="mr-job-qty" placeholder="0" inputmode="numeric"></div>
@@ -656,13 +660,16 @@ function saveSafety(){
 function saveMorning(){
   var station=selStation.morning;hideErr('morning-st-err');if(!station){showErr('morning-st-err');return;}
   var material=document.getElementById('mr-material').value.trim();
+  var job1=document.getElementById('mr-job1').value.trim();
+  var job2=document.getElementById('mr-job2').value.trim();
+  var job3=document.getElementById('mr-job3').value.trim();
   var jobQty=document.getElementById('mr-job-qty').value;
   var onHand=document.getElementById('mr-on-hand').value;
   var alreadyRun=document.getElementById('mr-already-run').value;
   var customTime=document.getElementById('mr-custom-time').value.trim();
   var notes=document.getElementById('mr-notes').value.trim();
   var remaining=(jobQty&&alreadyRun)?(parseInt(jobQty)-parseInt(alreadyRun)):null;
-  var record={id:Date.now(),station:station,material:material,jobQty:jobQty,onHand:onHand,alreadyRun:alreadyRun,remaining:remaining,needsFA:mrFANeeded,inspectTime:customTime||mrSelTime,notes:notes,time:fmtTime(new Date()),dept:activeDept};
+  var record={id:Date.now(),station:station,material:material,job1:job1,job2:job2,job3:job3,jobQty:jobQty,onHand:onHand,alreadyRun:alreadyRun,remaining:remaining,needsFA:mrFANeeded,inspectTime:customTime||mrSelTime,notes:notes,time:fmtTime(new Date()),dept:activeDept};
   morningRounds=morningRounds.filter(function(r){return r.station!==station;});
   morningRounds.push(record);
   persistMorning();closeSheet('morning');resetSheet('morning');showTab('morning');
@@ -693,7 +700,7 @@ function resetSheet(name){
     mrFANeeded=false;mrSelTime=null;
     document.getElementById('mr-fa-toggle').classList.remove('on');
     document.querySelectorAll('#mr-time-row .dur-btn').forEach(function(b){b.classList.remove('sel');});
-    ['mr-material','mr-job-qty','mr-on-hand','mr-already-run','mr-custom-time','mr-notes'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+    ['mr-material','mr-job1','mr-job2','mr-job3','mr-job-qty','mr-on-hand','mr-already-run','mr-custom-time','mr-notes'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
     hideErr('morning-st-err');
   }
 }
@@ -767,7 +774,8 @@ function renderMorning(){
   if(!morningRounds.length){el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">No station checks yet</div><div class="empty-sub">Tap the button below to add</div></div>';return;}
   el.innerHTML=morningRounds.slice().sort(function(a,b){return a.station.localeCompare(b.station);}).map(function(r){
     var remaining=r.jobQty&&r.alreadyRun?(parseInt(r.jobQty)-parseInt(r.alreadyRun)):null;
-    return '<div class="mr-card'+(r.needsFA?' needs-fa':'')+'">'+'<div class="mr-header"><span class="mr-station">'+escH(r.station)+'</span>'+(r.needsFA?'<span class="mr-fa-tag">First Articles</span>':'')+'</div>'+(r.material?'<div style="font-size:13px;color:#333;margin-bottom:8px">'+escH(r.material)+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px">'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Job Qty</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.jobQty||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">On Hand</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.onHand||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Already Run</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.alreadyRun||'--')+'</div></div>'+'</div>'+(remaining!==null?'<div style="font-size:12px;color:var(--gray);margin-bottom:4px">Remaining: <strong style="color:var(--navy)">'+remaining+'</strong></div>':'')+(r.inspectTime?'<div style="font-size:12px;color:'+(r.needsFA?'var(--amber)':'var(--gray)')+'">Inspect: '+formatInspectTime(r.inspectTime)+'</div>':'')+(r.notes?'<div style="font-size:12px;color:var(--gray);margin-top:4px">'+escH(r.notes)+'</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'+'<span style="font-size:10px;color:var(--gray)">'+r.time+'</span>'+'<button style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer" onclick="deleteMorning('+r.id+')">Remove</button>'+'</div></div>';
+    var jobs=[r.job1,r.job2,r.job3].filter(Boolean);
+    return '<div class="mr-card'+(r.needsFA?' needs-fa':'')+'">'+'<div class="mr-header"><span class="mr-station">'+escH(r.station)+'</span>'+(r.needsFA?'<span class="mr-fa-tag">First Articles</span>':'')+'</div>'+(r.material?'<div style="font-size:12px;color:#555;margin-bottom:6px">📦 '+escH(r.material)+'</div>':'')+(jobs.length?'<div style="font-size:13px;color:#111;font-weight:600;margin-bottom:8px">'+jobs.map(function(j,idx){return '<span style="background:#e8f0fe;color:#1a3a7a;border-radius:6px;padding:2px 8px;font-size:12px;margin-right:4px">'+escH(j)+'</span>';}).join('')+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px">'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Job Qty</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.jobQty||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">On Hand</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.onHand||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Already Run</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.alreadyRun||'--')+'</div></div>'+'</div>'+(remaining!==null?'<div style="font-size:12px;color:var(--gray);margin-bottom:4px">Remaining: <strong style="color:var(--navy)">'+remaining+'</strong></div>':'')+(r.inspectTime?'<div style="font-size:12px;color:'+(r.needsFA?'var(--amber)':'var(--gray)')+'">Inspect: '+formatInspectTime(r.inspectTime)+'</div>':'')+(r.notes?'<div style="font-size:12px;color:var(--gray);margin-top:4px">'+escH(r.notes)+'</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'+'<span style="font-size:10px;color:var(--gray)">'+r.time+'</span>'+'<button style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer" onclick="deleteMorning('+r.id+')">Remove</button>'+'</div></div>';
   }).join('');
 }
 
