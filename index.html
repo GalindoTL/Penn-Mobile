@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D2D5E">
+<title>Penn Floor Log</title>
+<style>
+:root{
+  --navy:#0D2D5E;--bg:#f0f4fa;--white:#fff;
+  --red:#d93025;--red-lt:#fdeaea;
+  --green:#1a7a4a;--green-lt:#e6f7ee;
+  --amber:#b06000;--amber-lt:#fff3e0;
+  --blue:#1a4fa0;--blue-lt:#e8f0fc;
+  --gray:#64748b;--gray-lt:#f1f5f9;--border:#dde3ed;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+html,body{height:100%;background:var(--bg);overscroll-behavior:none}
+
+.hdr{background:var(--navy);padding:14px 16px 10px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between}
+.hdr-co{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase}
+.hdr-day{font-size:17px;font-weight:700;color:#fff;margin-top:2px}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px}
+.hdr-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#fff}
+
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:68px;z-index:40}
+.tab{flex:1;padding:11px 4px;font-size:12px;font-weight:600;color:var(--gray);text-align:center;cursor:pointer;border:none;background:none;position:relative;transition:color .15s}
+.tab.active{color:var(--navy)}
+.tab.active::after{content:'';position:absolute;bottom:-2px;left:6px;right:6px;height:2px;background:var(--navy);border-radius:1px}
+.badge{display:inline-block;background:var(--red);color:#fff;border-radius:10px;min-width:17px;height:17px;font-size:10px;font-weight:700;line-height:17px;padding:0 4px;margin-left:3px;vertical-align:middle}
+
+.page{padding:14px 14px 110px;overflow-y:auto;height:calc(100vh - 118px)}
+.slbl{font-size:11px;font-weight:700;letter-spacing:.09em;color:var(--gray);text-transform:uppercase;margin:16px 0 8px}
+.slbl:first-child{margin-top:0}
+
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.abtn{border:none;border-radius:16px;padding:16px 12px 14px;text-align:center;cursor:pointer;transition:transform .1s;-webkit-appearance:none}
+.abtn:active{transform:scale(.94)}
+.abtn .aico{font-size:26px;display:block;margin-bottom:5px}
+.abtn .atxt{font-size:13px;font-weight:700;display:block}
+.abtn.red{background:var(--red-lt);color:var(--red)}
+.abtn.amber{background:var(--amber-lt);color:var(--amber)}
+.abtn.blue{background:var(--blue-lt);color:var(--blue)}
+.abtn.green{background:var(--green-lt);color:var(--green)}
+
+.st-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:4px}
+.st-btn{background:#fff;border:2px solid var(--border);border-radius:11px;padding:11px 8px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;text-align:center;line-height:1.3;-webkit-appearance:none;transition:all .15s}
+.st-btn:active{transform:scale(.95)}
+.st-btn.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.dur-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.dur-btn{background:#fff;border:2px solid var(--border);border-radius:10px;padding:10px 4px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;text-align:center;-webkit-appearance:none;transition:all .15s}
+.dur-btn:active{transform:scale(.95)}
+.dur-btn.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.min-input{width:100%;background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:12px;-webkit-appearance:none}
+.min-input:focus{outline:none;border-color:var(--navy)}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
+.chip{background:#fff;border:2px solid var(--border);border-radius:20px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--gray);cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.chip:active{transform:scale(.95)}
+.chip.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.tinput{width:100%;background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;font-family:-apple-system,sans-serif;color:#111;resize:none;-webkit-appearance:none;transition:border-color .15s}
+.tinput:focus{outline:none;border-color:var(--navy)}
+.tinput.sm{min-height:52px}
+.tinput.md{min-height:76px}
+.numinput{background:#fff;border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-size:15px;font-weight:600;color:var(--navy);-webkit-appearance:none;width:100%}
+.numinput:focus{outline:none;border-color:var(--navy)}
+
+.emp-sel{width:100%;background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;font-weight:600;color:var(--navy);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230D2D5E' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+
+.entry{background:#fff;border:1.5px solid var(--border);border-radius:13px;padding:12px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:9px}
+.entry-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.entry-ico.dt{background:var(--amber-lt)}
+.entry-ico.note{background:var(--blue-lt)}
+.entry-ico.safety{background:var(--red-lt)}
+.entry-ico.coaching{background:#f0eafa}
+.entry-ico.morning{background:#e8eef8}
+.entry-body{flex:1;min-width:0}
+.entry-title{font-size:13px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-sub{font-size:12px;color:var(--gray);margin-top:2px;line-height:1.4}
+.entry-time{font-size:10px;color:var(--gray);margin-top:3px}
+.entry-del{background:none;border:none;color:var(--red);font-size:22px;font-weight:300;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1}
+
+/* MORNING */
+.mr-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.mr-card.needs-fa{border-color:var(--amber);background:var(--amber-lt)}
+.mr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mr-station{font-size:15px;font-weight:700;color:var(--navy)}
+.mr-fa-tag{background:var(--amber);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+.mr-label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em}
+.fa-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:6px}
+.fa-toggle-lbl{font-size:13px;font-weight:600;color:var(--navy)}
+.tgl{width:44px;height:26px;background:var(--border);border-radius:13px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tgl.on{background:var(--amber)}
+.tgl::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tgl.on::after{left:21px}
+
+/* FA ALERT */
+.fa-alert{background:var(--amber-lt);border:2px solid var(--amber);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.fa-alert-title{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:4px}
+.fa-alert-item{font-size:13px;color:var(--amber);padding:2px 0;display:flex;align-items:center;gap:6px}
+.fa-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0}
+
+/* EXPORT */
+.sum-card{background:var(--navy);border-radius:15px;padding:16px;margin-bottom:14px;color:#fff}
+.sum-title{font-size:11px;font-weight:700;letter-spacing:.1em;opacity:.55;text-transform:uppercase}
+.sum-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.sum-item{text-align:center}
+.sum-val{font-size:26px;font-weight:700}
+.sum-lbl{font-size:10px;opacity:.55;margin-top:2px;text-transform:uppercase}
+.how-card{background:var(--green-lt);border:2px solid var(--green);border-radius:13px;padding:13px;margin-bottom:13px}
+.how-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:7px}
+.how-step{display:flex;align-items:flex-start;gap:7px;margin-bottom:6px;font-size:12px;color:var(--green);font-weight:600}
+.step-num{width:19px;height:19px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px}
+.copy-box{width:100%;background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:11px;font-family:monospace;color:#333;min-height:100px;resize:none}
+
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);padding:12px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:8px;z-index:50}
+.bbtn{flex:1;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:transform .1s}
+.bbtn:active{transform:scale(.96)}
+.bbtn.primary{background:var(--navy);color:#fff}
+.bbtn.secondary{background:var(--gray-lt);color:var(--navy)}
+.bbtn.green{background:var(--green);color:#fff}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:flex;align-items:flex-end}
+.sheet{background:#fff;border-radius:22px 22px 0 0;padding:0 16px;width:100%;max-height:93vh;overflow-y:auto;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.sheet-top{padding:14px 0 10px;position:sticky;top:0;background:#fff;z-index:10;border-bottom:1px solid var(--border);margin-bottom:14px}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px}
+.sheet-title{font-size:19px;font-weight:700;color:#111;text-align:center}
+.sheet-body{padding-bottom:8px}
+.save-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:13px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px;-webkit-appearance:none}
+.save-btn:active{transform:scale(.97)}
+.cancel-btn{width:100%;background:var(--gray-lt);color:var(--navy);border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;margin-bottom:4px;-webkit-appearance:none}
+.cancel-btn:active{transform:scale(.97)}
+.err{color:var(--red);font-size:12px;font-weight:600;margin-top:4px}
+.empty{text-align:center;padding:44px 20px;color:var(--gray)}
+.empty-ico{font-size:42px;margin-bottom:10px}
+.empty-txt{font-size:15px;font-weight:600;color:#333}
+.empty-sub{font-size:13px;margin-top:4px}
+.hidden{display:none!important}
+.st-list-item{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.st-list-item input{flex:1;border:none;font-size:14px;font-family:inherit;color:var(--navy);font-weight:600;background:transparent;outline:none}
+.st-list-item input:focus{background:#f0f4ff;border-radius:6px;padding:2px 6px}
+.st-del-btn{background:none;border:none;color:#c0392b;font-size:18px;font-weight:700;cursor:pointer;padding:0 4px;line-height:1;-webkit-tap-highlight-color:transparent}
+
+/* DEPT SELECTOR */
+.dept-overlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.dept-logo-line{font-size:10px;font-weight:700;letter-spacing:.15em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:6px}
+.dept-headline{font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;text-align:center}
+.dept-sub-line{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:32px;text-align:center}
+.dept-card-mob{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:18px;padding:20px 18px;margin-bottom:14px;width:100%;max-width:360px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.dept-card-mob:active{transform:scale(.97)}
+.dept-card-mob.mur1{border-color:rgba(100,160,255,.5)}
+.dept-card-mob.mur25{border-color:rgba(50,200,130,.5)}
+.dept-card-mob-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.dept-card-mob-ico{font-size:28px}
+.dept-card-mob-name{font-size:18px;font-weight:800;color:#fff}
+.dept-card-mob-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:6px}
+.dept-card-mob-tag.mur1{background:rgba(100,160,255,.25);color:#7ec0ff}
+.dept-card-mob-tag.mur25{background:rgba(50,200,130,.25);color:#5be6a0}
+.dept-card-mob-sub{font-size:12px;color:rgba(255,255,255,.45);line-height:1.5}
+.dept-badge-header{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.05em}
+.dept-badge-mur1{background:rgba(100,160,255,.25);color:#a0d0ff}
+.dept-badge-mur25{background:rgba(50,200,130,.25);color:#80e8b0}
+</style>
+</head>
+<body>
+
+<!-- DEPT SELECTOR -->
+<div id="dept-overlay" class="dept-overlay hidden">
+  <div class="dept-logo-line">Penn Aluminum International LLC</div>
+  <div class="dept-headline">Select Department</div>
+  <div class="dept-sub-line">Choose which dept you are supervising</div>
+  <div class="dept-card-mob mur1" onclick="selectDept('mur1')">
+    <div class="dept-card-mob-top">
+      <span class="dept-card-mob-ico">🏭</span>
+      <div>
+        <span class="dept-card-mob-name">Tube Mill</span>
+        <span class="dept-card-mob-tag mur1">MUR1</span>
+      </div>
+    </div>
+    <div class="dept-card-mob-sub">Press · Blocks · Bi-Lines · Tri-Line · In-Lines · Oven · Saws · CTL · Coil Packing · 24 employees</div>
+  </div>
+  <div class="dept-card-mob mur25" onclick="selectDept('mur25')">
+    <div class="dept-card-mob-top">
+      <span class="dept-card-mob-ico">🔧</span>
+      <div>
+        <span class="dept-card-mob-name">Benches</span>
+        <span class="dept-card-mob-tag mur25">MUR2/5</span>
+      </div>
+    </div>
+    <div class="dept-card-mob-sub">Metalsaw · Brush Deburr · Tsune · Drawbenches · Static Mac · Rohbi · Degreaser · 18 employees</div>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:12px">You can switch departments from the Export tab</div>
+</div>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-co" id="hdr-dept-label">Penn Aluminum · Tube Mill</div>
+    <div class="hdr-day" id="hdr-day"></div>
+    <div class="hdr-sub">Floor Log</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+    <div class="hdr-pill" id="hdr-count">0 entries</div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <div class="dept-badge-header" id="hdr-dept-badge">MUR1</div>
+      <button onclick="openDeptSelector()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;color:rgba(255,255,255,.8);font-size:10px;font-weight:600;padding:3px 9px;cursor:pointer;-webkit-tap-highlight-color:transparent">switch</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-btn-log" onclick="showTab('log')">Log</button>
+  <button class="tab" id="tab-btn-morning" onclick="showTab('morning')">Morning <span class="badge hidden" id="fa-badge">0</span></button>
+  <button class="tab" id="tab-btn-entries" onclick="showTab('entries')">Entries <span class="badge hidden" id="entries-badge">0</span></button>
+  <button class="tab" id="tab-btn-export" onclick="showTab('export')">Export</button>
+  <button class="tab" id="tab-btn-settings" onclick="showTab('settings')">⚙️</button>
+</div>
+
+<!-- LOG -->
+<div class="page" id="page-log">
+  <div id="fa-alerts"></div>
+  <div class="slbl">What are you logging?</div>
+  <div class="action-grid">
+    <button class="abtn red" onclick="openSheet('downtime')"><span class="aico">⏱</span><span class="atxt">Downtime</span></button>
+    <button class="abtn amber" onclick="openSheet('note')"><span class="aico">📝</span><span class="atxt">Floor Note</span></button>
+    <button class="abtn blue" onclick="openSheet('coaching')"><span class="aico">💬</span><span class="atxt">Conversation</span></button>
+    <button class="abtn green" onclick="openSheet('safety')"><span class="aico">🦺</span><span class="atxt">Safety</span></button>
+  </div>
+  <div id="press-check-btn-wrap" class="hidden">
+    <button class="abtn" onclick="openSheet('presscheck')" style="background:#fff0f0;color:#c0392b;border:2px solid #e8b4b8;border-radius:16px;padding:14px 12px;width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:4px">
+      <span style="font-size:24px">⚙️</span>
+      <div style="text-align:left"><div style="font-size:14px;font-weight:700">Press Check</div><div style="font-size:11px;opacity:.7;margin-top:1px">Verify what presses & ovens are running</div></div>
+    </button>
+  </div>
+  <div class="slbl">Recent</div>
+  <div id="recent-list"></div>
+</div>
+
+<!-- MORNING -->
+<div class="page hidden" id="page-morning">
+  <div class="slbl">Morning Round — Material Check</div>
+  <div id="morning-cards"></div>
+  <button onclick="openSheet('morning')" style="width:100%;margin-top:4px;border-radius:12px;padding:14px;font-size:14px;font-weight:700;border:none;background:var(--navy);color:#fff;cursor:pointer">+ Add Station Check</button>
+</div>
+
+<!-- ENTRIES -->
+<div class="page hidden" id="page-entries">
+  <div id="all-list"></div>
+</div>
+
+<!-- EXPORT -->
+<div class="page hidden" id="page-export">
+  <div class="sum-card">
+    <div class="sum-title">Today's Summary</div>
+    <div class="sum-row">
+      <div class="sum-item"><div class="sum-val" id="sum-dt">0</div><div class="sum-lbl">Downtimes</div></div>
+      <div class="sum-item"><div class="sum-val" id="sum-min">0</div><div class="sum-lbl">Total Min</div></div>
+      <div class="sum-item"><div class="sum-val" id="sum-other">0</div><div class="sum-lbl">Other Logs</div></div>
+    </div>
+  </div>
+  <div class="how-card">
+    <div class="how-title">How to import into your PC app</div>
+    <div class="how-step"><div class="step-num">1</div>Tap "Export File" below</div>
+    <div class="how-step"><div class="step-num">2</div>Send to yourself (email, iMessage, WhatsApp)</div>
+    <div class="how-step"><div class="step-num">3</div>On PC: click "Import Floor Log" in Daily Log</div>
+    <div class="how-step"><div class="step-num">4</div>Data merges automatically</div>
+  </div>
+  <div class="slbl">Or copy this text</div>
+  <textarea class="copy-box" id="copy-box" readonly></textarea>
+  <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border)">
+    <div class="slbl" style="margin-top:0">Department</div>
+    <div style="background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--navy)" id="export-dept-label">--</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">Each dept has separate data</div>
+      </div>
+      <button onclick="openDeptSelector()" style="background:var(--gray-lt);border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer">Switch</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom">
+  <button class="bbtn secondary" onclick="confirmClear()">Clear All</button>
+  <button class="bbtn green" onclick="doExport()">Export This Dept</button>
+  <button class="bbtn green" onclick="doExportBoth()" style="background:#1a5c3a">Export Both</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="page hidden" id="page-settings">
+  <div class="slbl">Stations — <span id="set-dept-name">--</span></div>
+  <div id="station-list" style="margin-bottom:12px"></div>
+  <div style="display:flex;gap:8px;margin-bottom:24px">
+    <input type="text" id="new-station-input" placeholder="New station name..." style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit">
+    <button onclick="addStation()" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">Add</button>
+  </div>
+  <div class="slbl">About</div>
+  <div style="background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px;font-size:12px;color:var(--gray);line-height:1.6">
+    Penn Floor Log · Mobile<br>
+    Supervisor: Luis Galindo<br>
+    Station changes apply immediately to all forms in this dept.
+  </div>
+</div>
+
+<!-- DOWNTIME SHEET -->
+<div class="overlay hidden" id="overlay-downtime">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Log Downtime</div></div>
+    <div class="sheet-body">
+      <div class="slbl">Station *</div>
+      <div class="st-grid" id="dt-st-grid"></div>
+      <div class="err hidden" id="dt-st-err">Please select a station</div>
+      <div class="slbl">Duration *</div>
+      <div class="dur-row">
+        <button class="dur-btn" onclick="pickDur(this,15)">15 min</button>
+        <button class="dur-btn" onclick="pickDur(this,30)">30 min</button>
+        <button class="dur-btn" onclick="pickDur(this,45)">45 min</button>
+        <button class="dur-btn" onclick="pickDur(this,60)">1 hr</button>
+      </div>
+      <input class="min-input" type="number" id="dt-custom" placeholder="Or enter custom minutes..." inputmode="numeric" oninput="clearDurBtns()">
+      <div class="err hidden" id="dt-dur-err">Please select or enter duration</div>
+      <div class="slbl">Cause *</div>
+      <div class="chips" id="dt-cause-wrap">
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Equipment Failure</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Tooling Change</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Material Issue</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Setup / Changeover</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Scheduled Maintenance</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Safety Stop</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Personnel</button>
+        <button class="chip" onclick="pickChip(this,'dt-cause')">Other</button>
+      </div>
+      <div class="err hidden" id="dt-cause-err">Please select a cause</div>
+      <div class="slbl">Details (optional)</div>
+      <textarea class="tinput sm" id="dt-details" placeholder="e.g. jaw pad broken..."></textarea>
+      <button class="save-btn" onclick="saveDowntime()">Add Downtime</button>
+      <button class="cancel-btn" onclick="closeSheet('downtime')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE SHEET -->
+<div class="overlay hidden" id="overlay-note">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Floor Note</div></div>
+    <div class="sheet-body">
+      <div class="slbl">Category</div>
+      <div class="chips" id="note-cat-wrap">
+        <button class="chip" onclick="pickChip(this,'note-cat')">General</button>
+        <button class="chip" onclick="pickChip(this,'note-cat')">Materials Low</button>
+        <button class="chip" onclick="pickChip(this,'note-cat')">Equipment Issue</button>
+        <button class="chip" onclick="pickChip(this,'note-cat')">Quality</button>
+        <button class="chip" onclick="pickChip(this,'note-cat')">Handoff</button>
+        <button class="chip" onclick="pickChip(this,'note-cat')">Follow-Up Needed</button>
+      </div>
+      <div class="slbl">Station (optional)</div>
+      <div class="st-grid" id="note-st-grid"></div>
+      <div class="slbl">Note *</div>
+      <textarea class="tinput md" id="note-text" placeholder="What do you need to remember?"></textarea>
+      <div class="err hidden" id="note-text-err">Please write a note</div>
+      <button class="save-btn" onclick="saveNote()">Save Note</button>
+      <button class="cancel-btn" onclick="closeSheet('note')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- COACHING SHEET -->
+<div class="overlay hidden" id="overlay-coaching">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Log Conversation</div></div>
+    <div class="sheet-body">
+      <div class="slbl">Employee</div>
+      <select class="emp-sel" id="coaching-emp"></select>
+      <div class="slbl" style="margin-top:10px">Or type a name</div>
+      <input type="text" id="coaching-other" placeholder="Manager, visitor, other..." class="min-input" style="margin-bottom:4px">
+      <div class="err hidden" id="coaching-emp-err">Please select or enter a name</div>
+      <div class="slbl">Type *</div>
+      <div class="chips" id="coaching-type-wrap">
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Coaching</button>
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Verbal Warning</button>
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Written Warning</button>
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Positive Recognition</button>
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Manager Conversation</button>
+        <button class="chip" onclick="pickChip(this,'coaching-type')">Other</button>
+      </div>
+      <div class="err hidden" id="coaching-type-err">Please select a type</div>
+      <div class="slbl">Notes (optional)</div>
+      <textarea class="tinput sm" id="coaching-notes" placeholder="Brief description..."></textarea>
+      <button class="save-btn" onclick="saveCoaching()">Save</button>
+      <button class="cancel-btn" onclick="closeSheet('coaching')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAFETY SHEET -->
+<div class="overlay hidden" id="overlay-safety">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Safety Observation</div></div>
+    <div class="sheet-body">
+      <div class="slbl">Type *</div>
+      <div class="chips" id="safety-type-wrap">
+        <button class="chip" onclick="pickChip(this,'safety-type')">Near-Miss</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">PPE Issue</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">Housekeeping</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">Equipment Hazard</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">Positive Observation</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">Incident</button>
+        <button class="chip" onclick="pickChip(this,'safety-type')">Other</button>
+      </div>
+      <div class="err hidden" id="safety-type-err">Please select a type</div>
+      <div class="slbl">Area / Station (optional)</div>
+      <div class="st-grid" id="safety-st-grid"></div>
+      <div class="slbl">Description *</div>
+      <textarea class="tinput md" id="safety-desc" placeholder="What did you observe?"></textarea>
+      <div class="err hidden" id="safety-desc-err">Please describe the observation</div>
+      <div class="slbl">Action Taken</div>
+      <div class="chips" id="safety-action-wrap">
+        <button class="chip" onclick="pickChip(this,'safety-action')">Corrected on spot</button>
+        <button class="chip" onclick="pickChip(this,'safety-action')">Verbal reminder given</button>
+        <button class="chip" onclick="pickChip(this,'safety-action')">Report filed</button>
+        <button class="chip" onclick="pickChip(this,'safety-action')">Escalated to manager</button>
+        <button class="chip" onclick="pickChip(this,'safety-action')">No action needed</button>
+      </div>
+      <button class="save-btn" onclick="saveSafety()">Save</button>
+      <button class="cancel-btn" onclick="closeSheet('safety')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MORNING SHEET -->
+<div class="overlay hidden" id="overlay-morning">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Morning Station Check</div></div>
+    <div class="sheet-body">
+      <div class="slbl">Station *</div>
+      <div class="st-grid" id="morning-st-grid"></div>
+      <div class="err hidden" id="morning-st-err">Please select a station</div>
+      <div class="slbl">Material / Coil</div>
+      <textarea class="tinput sm" id="mr-material" placeholder="e.g. 3003 aluminum, 1.5 inch OD..."></textarea>
+      <div class="slbl">Jobs Running</div>
+      <div id="mr-jobs-wrap"></div>
+      <div class="slbl">Quantities</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
+        <div><div class="mr-label" style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px">Job Qty</div><input class="numinput" type="number" id="mr-job-qty" placeholder="0" inputmode="numeric"></div>
+        <div><div class="mr-label" style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px">On Hand</div><input class="numinput" type="number" id="mr-on-hand" placeholder="0" inputmode="numeric"></div>
+        <div><div class="mr-label" style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px">Already Run</div><input class="numinput" type="number" id="mr-already-run" placeholder="0" inputmode="numeric"></div>
+      </div>
+      <div class="slbl">Estimated inspection time</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px" id="mr-time-row">
+        <button class="dur-btn" onclick="pickMrTime(this,'1hr')">1 hr</button>
+        <button class="dur-btn" onclick="pickMrTime(this,'2hr')">2 hr</button>
+        <button class="dur-btn" onclick="pickMrTime(this,'3hr')">3 hr</button>
+        <button class="dur-btn" onclick="pickMrTime(this,'4hr')">4 hr</button>
+        <button class="dur-btn" onclick="pickMrTime(this,'end')">End shift</button>
+      </div>
+      <input class="min-input" type="text" id="mr-custom-time" placeholder="Or enter custom time (e.g. 10:30 AM)">
+      <div class="fa-toggle">
+        <span class="fa-toggle-lbl">⚠️ Will need First Articles</span>
+        <div class="tgl" id="mr-fa-toggle" onclick="toggleFA()"></div>
+      </div>
+      <div class="slbl">Notes (optional)</div>
+      <textarea class="tinput sm" id="mr-notes" placeholder="Anything else to note..."></textarea>
+      <button class="save-btn" onclick="saveMorning()">Save Station Check</button>
+      <button class="cancel-btn" onclick="closeSheet('morning')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRESS CHECK SHEET -->
+<div class="overlay hidden" id="overlay-presscheck">
+  <div class="sheet">
+    <div class="sheet-top"><div class="sheet-handle"></div><div class="sheet-title">Press Check</div></div>
+    <div class="sheet-body">
+      <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Record what each press and oven is currently running. Not your dept — verification only.</p>
+
+      <!-- Press 1 -->
+      <div style="background:var(--gray-lt);border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:10px">⚙️ <span id="pc-press1-label">1650 Press</span></div>
+        <div class="slbl" style="margin-top:0">Job 1</div>
+        <input class="tinput sm" type="text" id="pc-press1-job1" placeholder="Part # or description...">
+        <div class="slbl">Job 2</div>
+        <input class="tinput sm" type="text" id="pc-press1-job2" placeholder="Part # or description...">
+        <div class="slbl">Job 3</div>
+        <input class="tinput sm" type="text" id="pc-press1-job3" placeholder="Part # or description...">
+        <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+          <div class="slbl" style="color:#b06000">🔥 <span id="pc-press1-oven-label">Oven</span></div>
+          <input class="tinput sm" type="text" id="pc-press1-oven" placeholder="What's in the oven...">
+        </div>
+      </div>
+
+      <!-- Press 2 -->
+      <div style="background:var(--gray-lt);border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:10px">⚙️ <span id="pc-press2-label">3000 Press</span></div>
+        <div class="slbl" style="margin-top:0">Job 1</div>
+        <input class="tinput sm" type="text" id="pc-press2-job1" placeholder="Part # or description...">
+        <div class="slbl">Job 2</div>
+        <input class="tinput sm" type="text" id="pc-press2-job2" placeholder="Part # or description...">
+        <div class="slbl">Job 3</div>
+        <input class="tinput sm" type="text" id="pc-press2-job3" placeholder="Part # or description...">
+        <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+          <div class="slbl" style="color:#b06000">🔥 <span id="pc-press2-oven-label">Oven</span></div>
+          <input class="tinput sm" type="text" id="pc-press2-oven" placeholder="What's in the oven...">
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="savePressCheck()">Save Press Check</button>
+      <button class="cancel-btn" onclick="closeSheet('presscheck')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// -- Dept data -----------------------------------------------------------------
+var DEPT_DATA={
+  mur1:{
+    label:'Penn Aluminum · Tube Mill',
+    badgeText:'MUR1',
+    badgeClass:'dept-badge-mur1',
+    storageKey:'penn_floor_v3_mur1',
+    morningKey:'penn_morning_v3_mur1',
+    stations:["3150 PRESS", "36 BLOCK", "40 BLOCK", "BI-LINE 1", "BI-LINE 2", "BI-LINE 3", "TRI-LINE", "C/O SAW 1", "C/O SAW 2", "IN-LINE 1", "IN-LINE 2", "OVEN 5", "ROHBI SAW", "BURR OAK", "CTL", "COIL PACKING"],
+    employees:["Amy Leehy","Anthony Merritt","Anthony West (Lead/TR)","Brian Hicks","Chris Oyler (Lead)","Dakota Shelby","David Casper (TR)","David Feth (TR)","Decker James","Evan Hudson","Jacob Clutts","Jeff Maddox","Joe Phillips (TR)","Matt Lee","Mitch Vestal","Nick Lopez Jr","Raymond Clover (TR)","Sam Morthland","Steve Gale (TR)","Steven Jackson","Tiffani Williams","Tiffany Stone","Travis Bonnett","Treyvon Cole (TR)"]
+  },
+  mur25:{
+    label:'Penn Aluminum · Benches',
+    badgeText:'MUR2/5',
+    badgeClass:'dept-badge-mur25',
+    storageKey:'penn_floor_v3_mur25',
+    morningKey:'penn_morning_v3_mur25',
+    stations:["METALSAW","BRUSH DEBURR","TSUNE","DRAWBENCH 1","DRAWBENCH 2","PUSH POINTER","ROTARY POINTER","STATIC MAC SAW","STATIC MAC","ROHBI 6","BIG MAC STR","BIG MAC SAW","DEGREASER"],
+    employees:["Barb Bundren","Brandon Jones (Lead/TR)","Bruce Colon","Corey Wolfe (TR)","Curtis Turner (Lead)","Daniel Bloodworth","Ernie Pedroza (TR)","Johnny McKee","Justin Carter","Kerri Morris","Lori Camden","Melisa Brinker","Michelle Smith","Parker Minton-Short","Robert Dunn","Roy Brown","Thomas Hawkins","Tim Cowsert"]
+  }
+};
+
+// -- State ---------------------------------------------------------------------
+var activeDept=localStorage.getItem('penn_active_dept_mobile')||'';
+var STATIONS=[];
+var EMPLOYEES=[];
+var entries=[];
+var morningRounds=[];
+var selStation={downtime:null,note:null,safety:null,morning:null};
+var selDur=null;
+var mrFANeeded=false;
+var mrSelTime=null;
+
+var today=new Date();
+var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+document.getElementById('hdr-day').textContent=DAYS[today.getDay()]+' '+MONTHS[today.getMonth()]+' '+today.getDate()+', '+today.getFullYear();
+
+// -- Dept init -----------------------------------------------------------------
+function selectDept(dept){
+  activeDept=dept;
+  localStorage.setItem('penn_active_dept_mobile',dept);
+  document.getElementById('dept-overlay').classList.add('hidden');
+  loadDept();
+}
+
+function openDeptSelector(){
+  document.getElementById('dept-overlay').classList.remove('hidden');
+}
+
+function loadDept(){
+  var cfg=DEPT_DATA[activeDept]||DEPT_DATA.mur1;
+  STATIONS=cfg.stations;
+  // Use custom stations if user has edited them
+  var customSt=localStorage.getItem('penn_stations_'+(activeDept||'mur1'));
+  if(customSt){try{STATIONS=JSON.parse(customSt);}catch(e){}}
+  EMPLOYEES=cfg.employees;
+  var sk=cfg.storageKey;
+  var mk=cfg.morningKey;
+  // Migrate old mur1 data on first load
+  if(activeDept==='mur1'){
+    var oldFloor=localStorage.getItem('penn_floor_v3');
+    var oldMorn=localStorage.getItem('penn_morning_v3');
+    if(oldFloor&&!localStorage.getItem(sk)){localStorage.setItem(sk,oldFloor);}
+    if(oldMorn&&!localStorage.getItem(mk)){localStorage.setItem(mk,oldMorn);}
+  }
+  try{entries=JSON.parse(localStorage.getItem(sk)||'[]');}catch(e){entries=[];}
+  try{morningRounds=JSON.parse(localStorage.getItem(mk)||'[]');}catch(e){morningRounds=[];}
+  // Update header
+  document.getElementById('hdr-dept-label').textContent=cfg.label;
+  var badge=document.getElementById('hdr-dept-badge');
+  badge.textContent=cfg.badgeText;
+  badge.className='dept-badge-header '+cfg.badgeClass;
+  var expLabel=document.getElementById('export-dept-label');
+  if(expLabel)expLabel.textContent=cfg.label;
+  document.title='Penn Floor Log · '+cfg.badgeText;
+  // Show/hide press check button
+  var pcWrap=document.getElementById('press-check-btn-wrap');
+  if(pcWrap)pcWrap.classList.toggle('hidden',activeDept!=='mur25');
+  // Load saved press names into sheet labels
+  loadPressLabels();
+  buildStationGrids();
+  buildEmpSelect();
+  renderAll();
+}
+
+if(!activeDept){
+  document.getElementById('dept-overlay').classList.remove('hidden');
+}else{
+  loadDept();
+}
+
+// -- Station grids -------------------------------------------------------------
+function buildStationGrids(){
+  var configs=[{gridId:'dt-st-grid',key:'downtime'},{gridId:'note-st-grid',key:'note'},{gridId:'safety-st-grid',key:'safety'},{gridId:'morning-st-grid',key:'morning'}];
+  configs.forEach(function(cfg){
+    var grid=document.getElementById(cfg.gridId);
+    if(!grid)return;
+    grid.innerHTML='';
+    STATIONS.forEach(function(st){
+      var btn=document.createElement('button');
+      btn.className='st-btn';btn.textContent=st;btn.type='button';
+      (function(b,k,s){b.onclick=function(){b.parentElement.querySelectorAll('.st-btn').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');selStation[k]=s;};})(btn,cfg.key,st);
+      grid.appendChild(btn);
+    });
+  });
+}
+
+function buildEmpSelect(){
+  var sel=document.getElementById('coaching-emp');
+  sel.innerHTML='<option value="">-- Select employee --</option>';
+  EMPLOYEES.forEach(function(e){var opt=document.createElement('option');opt.value=e;opt.textContent=e;sel.appendChild(opt);});
+}
+
+// -- Helpers -------------------------------------------------------------------
+function pickChip(btn,group){
+  var wrap=document.getElementById(group+'-wrap');
+  if(wrap)wrap.querySelectorAll('.chip').forEach(function(c){c.classList.remove('sel');});
+  btn.classList.add('sel');
+}
+function getChip(group){var wrap=document.getElementById(group+'-wrap');if(!wrap)return null;var s=wrap.querySelector('.chip.sel');return s?s.textContent.trim():null;}
+function pickDur(btn,mins){document.querySelectorAll('.dur-btn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');selDur=mins;document.getElementById('dt-custom').value='';}
+function clearDurBtns(){document.querySelectorAll('.dur-btn').forEach(function(b){b.classList.remove('sel');});selDur=null;}
+function getDuration(){var c=document.getElementById('dt-custom').value;if(c&&parseInt(c)>0)return parseInt(c);return selDur;}
+function pickMrTime(btn,val){document.querySelectorAll('#mr-time-row .dur-btn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');mrSelTime=val;document.getElementById('mr-custom-time').value='';}
+function toggleFA(){mrFANeeded=!mrFANeeded;document.getElementById('mr-fa-toggle').classList.toggle('on',mrFANeeded);}
+function fmtTime(d){var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap;}
+function showErr(id){var e=document.getElementById(id);if(e)e.classList.remove('hidden');}
+function hideErr(id){var e=document.getElementById(id);if(e)e.classList.add('hidden');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// -- Save functions ------------------------------------------------------------
+function saveDowntime(){
+  var station=selStation.downtime,mins=getDuration(),cause=getChip('dt-cause'),details=document.getElementById('dt-details').value.trim(),valid=true;
+  hideErr('dt-st-err');hideErr('dt-dur-err');hideErr('dt-cause-err');
+  if(!station){showErr('dt-st-err');valid=false;}if(!mins){showErr('dt-dur-err');valid=false;}if(!cause){showErr('dt-cause-err');valid=false;}
+  if(!valid)return;
+  entries.push({id:Date.now(),type:'downtime',time:fmtTime(new Date()),timestamp:new Date().toISOString(),station:station,mins:mins,cause:cause,note:details,dept:activeDept});
+  persist();closeSheet('downtime');resetSheet('downtime');showTab('entries');
+}
+
+function saveNote(){
+  var text=document.getElementById('note-text').value.trim(),cat=getChip('note-cat')||'General',station=selStation.note;
+  hideErr('note-text-err');if(!text){showErr('note-text-err');return;}
+  entries.push({id:Date.now(),type:'note',time:fmtTime(new Date()),timestamp:new Date().toISOString(),category:cat,station:station,text:text,dept:activeDept});
+  persist();closeSheet('note');resetSheet('note');showTab('entries');
+}
+
+function saveCoaching(){
+  var empSel=document.getElementById('coaching-emp').value;
+  var empOther=(document.getElementById('coaching-other')||{}).value||'';
+  var emp=(empOther.trim()||empSel).trim();
+  var type=getChip('coaching-type'),notes=document.getElementById('coaching-notes').value.trim(),valid=true;
+  hideErr('coaching-emp-err');hideErr('coaching-type-err');
+  if(!emp){showErr('coaching-emp-err');valid=false;}if(!type){showErr('coaching-type-err');valid=false;}
+  if(!valid)return;
+  entries.push({id:Date.now(),type:'coaching',time:fmtTime(new Date()),timestamp:new Date().toISOString(),employee:emp,convType:type,note:notes,dept:activeDept});
+  persist();closeSheet('coaching');resetSheet('coaching');showTab('entries');
+}
+
+function saveSafety(){
+  var safetyType=getChip('safety-type'),desc=document.getElementById('safety-desc').value.trim(),station=selStation.safety,action=getChip('safety-action'),valid=true;
+  hideErr('safety-type-err');hideErr('safety-desc-err');
+  if(!safetyType){showErr('safety-type-err');valid=false;}if(!desc){showErr('safety-desc-err');valid=false;}
+  if(!valid)return;
+  entries.push({id:Date.now(),type:'safety',time:fmtTime(new Date()),timestamp:new Date().toISOString(),safetyType:safetyType,station:station,note:desc,action:action,dept:activeDept});
+  persist();closeSheet('safety');resetSheet('safety');showTab('entries');
+}
+
+function saveMorning(){
+  var station=selStation.morning;hideErr('morning-st-err');if(!station){showErr('morning-st-err');return;}
+  var material=document.getElementById('mr-material').value.trim();
+  // Read jobs depending on dept
+  var jobsRaw='';var job1='';var job2='';var job3='';
+  if(activeDept==='mur1'){
+    job1=(document.getElementById('mr-job1')||{value:''}).value.trim();
+    job2=(document.getElementById('mr-job2')||{value:''}).value.trim();
+    job3=(document.getElementById('mr-job3')||{value:''}).value.trim();
+    jobsRaw=[job1,job2,job3].filter(Boolean).join('\n');
+  }else{
+    jobsRaw=(document.getElementById('mr-jobs')||{value:''}).value.trim();
+    var jobLines=jobsRaw?jobsRaw.split('\n').map(function(l){return l.trim();}).filter(Boolean):[];
+    job1=jobLines[0]||'';job2=jobLines[1]||'';job3=jobLines[2]||'';
+  }
+  var jobQty=document.getElementById('mr-job-qty').value;
+  var onHand=document.getElementById('mr-on-hand').value;
+  var alreadyRun=document.getElementById('mr-already-run').value;
+  var customTime=document.getElementById('mr-custom-time').value.trim();
+  var notes=document.getElementById('mr-notes').value.trim();
+  var remaining=(jobQty&&alreadyRun)?(parseInt(jobQty)-parseInt(alreadyRun)):null;
+  var record={id:Date.now(),station:station,material:material,jobs:jobsRaw,job1:job1,job2:job2,job3:job3,jobQty:jobQty,onHand:onHand,alreadyRun:alreadyRun,remaining:remaining,needsFA:mrFANeeded,inspectTime:customTime||mrSelTime,notes:notes,time:fmtTime(new Date()),dept:activeDept};
+  morningRounds=morningRounds.filter(function(r){return r.station!==station;});
+  morningRounds.push(record);
+  persistMorning();closeSheet('morning');resetSheet('morning');showTab('morning');
+}
+
+function resetSheet(name){
+  selStation[name]=null;
+  var grid=document.getElementById(name+'-st-grid');if(grid)grid.querySelectorAll('.st-btn').forEach(function(b){b.classList.remove('sel');});
+  if(name==='downtime'){
+    document.querySelectorAll('.dur-btn').forEach(function(b){b.classList.remove('sel');});
+    selDur=null;document.getElementById('dt-custom').value='';
+    var w=document.getElementById('dt-cause-wrap');if(w)w.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+    document.getElementById('dt-details').value='';
+    hideErr('dt-st-err');hideErr('dt-dur-err');hideErr('dt-cause-err');
+  }else if(name==='note'){
+    var w=document.getElementById('note-cat-wrap');if(w)w.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+    document.getElementById('note-text').value='';hideErr('note-text-err');
+  }else if(name==='coaching'){
+    document.getElementById('coaching-emp').value='';
+    var o=document.getElementById('coaching-other');if(o)o.value='';
+    var w=document.getElementById('coaching-type-wrap');if(w)w.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+    document.getElementById('coaching-notes').value='';hideErr('coaching-emp-err');hideErr('coaching-type-err');
+  }else if(name==='safety'){
+    var wt=document.getElementById('safety-type-wrap');if(wt)wt.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+    var wa=document.getElementById('safety-action-wrap');if(wa)wa.querySelectorAll('.chip').forEach(function(b){b.classList.remove('sel');});
+    document.getElementById('safety-desc').value='';hideErr('safety-type-err');hideErr('safety-desc-err');
+  }else if(name==='morning'){
+    mrFANeeded=false;mrSelTime=null;
+    document.getElementById('mr-fa-toggle').classList.remove('on');
+    document.querySelectorAll('#mr-time-row .dur-btn').forEach(function(b){b.classList.remove('sel');});
+    ['mr-material','mr-job1','mr-job2','mr-job3','mr-jobs','mr-job-qty','mr-on-hand','mr-already-run','mr-custom-time','mr-notes'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+    hideErr('morning-st-err');
+  }
+}
+
+// -- Storage -------------------------------------------------------------------
+function getStorageKey(){return (DEPT_DATA[activeDept]||DEPT_DATA.mur1).storageKey;}
+function getMorningKey(){return (DEPT_DATA[activeDept]||DEPT_DATA.mur1).morningKey;}
+function persist(){localStorage.setItem(getStorageKey(),JSON.stringify(entries));renderAll();}
+function persistMorning(){localStorage.setItem(getMorningKey(),JSON.stringify(morningRounds));renderAll();}
+
+// -- Render --------------------------------------------------------------------
+function renderAll(){
+  renderFAAlerts();renderRecent();renderEntries();renderMorning();renderExport();
+  var count=entries.length;
+  document.getElementById('hdr-count').textContent=count+(count===1?' entry':' entries');
+  var eb=document.getElementById('entries-badge');
+  if(count>0){eb.textContent=count;eb.classList.remove('hidden');}else{eb.classList.add('hidden');}
+  var faCount=morningRounds.filter(function(r){return r.needsFA;}).length;
+  var fab=document.getElementById('fa-badge');
+  if(faCount>0){fab.textContent=faCount;fab.classList.remove('hidden');}else{fab.classList.add('hidden');}
+}
+
+function renderFAAlerts(){
+  var el=document.getElementById('fa-alerts');
+  var faItems=morningRounds.filter(function(r){return r.needsFA;});
+  if(!faItems.length){el.innerHTML='';return;}
+  var items=faItems.map(function(r){
+    var t=r.inspectTime?(' — '+formatInspectTime(r.inspectTime)):'';
+    return '<div class="fa-alert-item"><div class="fa-dot"></div>'+escH(r.station)+' will need First Articles'+t+'</div>';
+  }).join('');
+  el.innerHTML='<div class="fa-alert"><div class="fa-alert-title">⚠️ First Articles Needed Today</div>'+items+'</div>';
+}
+
+function formatInspectTime(t){
+  var map={'1hr':'in ~1 hour','2hr':'in ~2 hours','3hr':'in ~3 hours','4hr':'in ~4 hours','end':'end of shift'};
+  return map[t]||t;
+}
+
+function entryHTML(e){
+  var cls={downtime:'dt',note:'note',coaching:'coaching',safety:'safety',presscheck:'morning'}[e.type]||'note';
+  var ico={downtime:'⏱',note:'📝',coaching:'💬',safety:'🦺',presscheck:'⚙️'}[e.type]||'📌';
+  var title='',sub='';
+  if(e.type==='downtime'){title=e.station+' — '+e.mins+' min';sub=e.cause+(e.note?' · '+e.note:'');}
+  else if(e.type==='note'){title='['+e.category+']'+(e.station?' · '+e.station:'');sub=e.text;}
+  else if(e.type==='coaching'){title=e.employee;sub=e.convType+(e.note?' · '+e.note:'');}
+  else if(e.type==='safety'){title=e.safetyType+(e.station?' · '+e.station:'');sub=e.note+(e.action?' | '+e.action:'');}
+  else if(e.type==='presscheck'){
+    title='Press Check';
+    var parts=[];
+    if(e.press1Job1||e.press1Job2||e.press1Job3)parts.push((e.press1Name||'1650 Press')+': '+[e.press1Job1,e.press1Job2,e.press1Job3].filter(Boolean).join(', '));
+    if(e.press2Job1||e.press2Job2||e.press2Job3)parts.push((e.press2Name||'3000 Press')+': '+[e.press2Job1,e.press2Job2,e.press2Job3].filter(Boolean).join(', '));
+    sub=parts.join(' | ');
+  }
+  return '<div class="entry"><div class="entry-ico '+cls+'">'+ico+'</div><div class="entry-body"><div class="entry-title">'+escH(title)+'</div>'+(sub?'<div class="entry-sub">'+escH(sub)+'</div>':'')+'<div class="entry-time">'+e.time+'</div></div><button class="entry-del" onclick="deleteEntry('+e.id+')">×</button></div>';
+}
+
+function renderRecent(){
+  var el=document.getElementById('recent-list');
+  if(!entries.length){el.innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">Nothing logged yet</div><div class="empty-sub">Tap a button above to start</div></div>';return;}
+  el.innerHTML=entries.slice(-3).reverse().map(function(e){return entryHTML(e);}).join('');
+}
+
+function renderEntries(){
+  var el=document.getElementById('all-list');
+  if(!entries.length){el.innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">No entries yet</div><div class="empty-sub">Use the Log tab to add entries</div></div>';return;}
+  el.innerHTML=entries.slice().reverse().map(function(e){return entryHTML(e);}).join('');
+}
+
+function renderMorning(){
+  var el=document.getElementById('morning-cards');
+  if(!morningRounds.length){el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">No station checks yet</div><div class="empty-sub">Tap the button below to add</div></div>';return;}
+  el.innerHTML=morningRounds.slice().sort(function(a,b){return a.station.localeCompare(b.station);}).map(function(r){
+    var remaining=r.jobQty&&r.alreadyRun?(parseInt(r.jobQty)-parseInt(r.alreadyRun)):null;
+    var jobs=r.jobs?r.jobs.split('\n').filter(Boolean):[r.job1,r.job2,r.job3].filter(Boolean);
+    return '<div class="mr-card'+(r.needsFA?' needs-fa':'')+'">'+'<div class="mr-header"><span class="mr-station">'+escH(r.station)+'</span>'+(r.needsFA?'<span class="mr-fa-tag">First Articles</span>':'')+'</div>'+(r.material?'<div style="font-size:12px;color:#555;margin-bottom:6px">📦 '+escH(r.material)+'</div>':'')+(jobs.length?'<div style="font-size:13px;color:#111;font-weight:600;margin-bottom:8px">'+jobs.map(function(j,idx){return '<span style="background:#e8f0fe;color:#1a3a7a;border-radius:6px;padding:2px 8px;font-size:12px;margin-right:4px">'+escH(j)+'</span>';}).join('')+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px">'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Job Qty</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.jobQty||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">On Hand</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.onHand||'--')+'</div></div>'+'<div><div class="mr-label" style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase">Already Run</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+(r.alreadyRun||'--')+'</div></div>'+'</div>'+(remaining!==null?'<div style="font-size:12px;color:var(--gray);margin-bottom:4px">Remaining: <strong style="color:var(--navy)">'+remaining+'</strong></div>':'')+(r.inspectTime?'<div style="font-size:12px;color:'+(r.needsFA?'var(--amber)':'var(--gray)')+'">Inspect: '+formatInspectTime(r.inspectTime)+'</div>':'')+(r.notes?'<div style="font-size:12px;color:var(--gray);margin-top:4px">'+escH(r.notes)+'</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'+'<span style="font-size:10px;color:var(--gray)">'+r.time+'</span>'+'<button style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer" onclick="deleteMorning('+r.id+')">Remove</button>'+'</div></div>';
+  }).join('');
+}
+
+function renderExport(){
+  var dts=entries.filter(function(e){return e.type==='downtime';});
+  var totalMins=dts.reduce(function(s,e){return s+(parseInt(e.mins)||0);},0);
+  var others=entries.filter(function(e){return e.type!=='downtime';}).length;
+  document.getElementById('sum-dt').textContent=dts.length;
+  document.getElementById('sum-min').textContent=totalMins;
+  document.getElementById('sum-other').textContent=others;
+  var cfg=DEPT_DATA[activeDept]||DEPT_DATA.mur1;
+  var expLabel=document.getElementById('export-dept-label');
+  if(expLabel)expLabel.textContent=cfg.label;
+  var dateStr=DAYS[today.getDay()]+' '+MONTHS[today.getMonth()]+' '+today.getDate()+', '+today.getFullYear();
+  var lines=['PENN ALUMINUM — FLOOR LOG','Dept: '+cfg.badgeText,dateStr,''];
+  if(dts.length){lines.push('DOWNTIME:');dts.forEach(function(e){lines.push('  '+e.time+' | '+e.station+' | '+e.mins+' min | '+e.cause+(e.note?' | '+e.note:''));});lines.push('  TOTAL: '+totalMins+' min');lines.push('');}
+  var coaching=entries.filter(function(e){return e.type==='coaching';});
+  if(coaching.length){lines.push('CONVERSATIONS:');coaching.forEach(function(e){lines.push('  '+e.time+' | '+e.employee+' | '+e.convType+(e.note?' | '+e.note:''));});lines.push('');}
+  var safety=entries.filter(function(e){return e.type==='safety';});
+  if(safety.length){lines.push('SAFETY:');safety.forEach(function(e){lines.push('  '+e.time+' | '+e.safetyType+(e.station?' | '+e.station:'')+' | '+e.note+(e.action?' | '+e.action:''));});lines.push('');}
+  var notes=entries.filter(function(e){return e.type==='note';});
+  if(notes.length){lines.push('NOTES:');notes.forEach(function(e){lines.push('  '+e.time+' | '+e.category+(e.station?' | '+e.station:'')+' | '+e.text);});}
+  var pcs=entries.filter(function(e){return e.type==='presscheck';});
+  if(pcs.length){
+    lines.push('');lines.push('PRESS CHECK:');
+    pcs.forEach(function(e){
+      lines.push('  '+e.time);
+      var p1n=e.press1Name||'1650 Press';
+      if(e.press1Job1||e.press1Job2||e.press1Job3)lines.push('  '+p1n+': '+[e.press1Job1,e.press1Job2,e.press1Job3].filter(Boolean).join(' | '));
+      if(e.press1Oven)lines.push('  '+(e.press1OvenName||'Oven')+' ('+p1n+'): '+e.press1Oven);
+      var p2n=e.press2Name||'3000 Press';
+      if(e.press2Job1||e.press2Job2||e.press2Job3)lines.push('  '+p2n+': '+[e.press2Job1,e.press2Job2,e.press2Job3].filter(Boolean).join(' | '));
+      if(e.press2Oven)lines.push('  '+(e.press2OvenName||'Oven')+' ('+p2n+'): '+e.press2Oven);
+    });
+  }
+  document.getElementById('copy-box').value=lines.join('\n');
+}
+
+// -- Press Check ---------------------------------------------------------------
+function loadPressLabels(){
+  var lastPC=null;
+  for(var i=entries.length-1;i>=0;i--){if(entries[i].type==='presscheck'){lastPC=entries[i];break;}}
+  var p1n=lastPC?lastPC.press1Name:'1650 Press';
+  var p2n=lastPC?lastPC.press2Name:'3000 Press';
+  var p1ov=lastPC?lastPC.press1OvenName:'Oven';
+  var p2ov=lastPC?lastPC.press2OvenName:'Oven';
+  var el;
+  el=document.getElementById('pc-press1-label');if(el)el.textContent=p1n;
+  el=document.getElementById('pc-press2-label');if(el)el.textContent=p2n;
+  el=document.getElementById('pc-press1-oven-label');if(el)el.textContent=p1ov;
+  el=document.getElementById('pc-press2-oven-label');if(el)el.textContent=p2ov;
+}
+
+function savePressCheck(){
+  var lastPC=null;
+  for(var i=entries.length-1;i>=0;i--){if(entries[i].type==='presscheck'){lastPC=entries[i];break;}}
+  var p1n=lastPC?lastPC.press1Name:'1650 Press';
+  var p2n=lastPC?lastPC.press2Name:'3000 Press';
+  var p1ov=lastPC?lastPC.press1OvenName:'Oven';
+  var p2ov=lastPC?lastPC.press2OvenName:'Oven';
+  var entry={
+    id:Date.now(),type:'presscheck',time:fmtTime(new Date()),timestamp:new Date().toISOString(),dept:activeDept,
+    press1Name:p1n,press1Job1:document.getElementById('pc-press1-job1').value.trim(),
+    press1Job2:document.getElementById('pc-press1-job2').value.trim(),
+    press1Job3:document.getElementById('pc-press1-job3').value.trim(),
+    press1OvenName:p1ov,press1Oven:document.getElementById('pc-press1-oven').value.trim(),
+    press2Name:p2n,press2Job1:document.getElementById('pc-press2-job1').value.trim(),
+    press2Job2:document.getElementById('pc-press2-job2').value.trim(),
+    press2Job3:document.getElementById('pc-press2-job3').value.trim(),
+    press2OvenName:p2ov,press2Oven:document.getElementById('pc-press2-oven').value.trim()
+  };
+  entries=entries.filter(function(e){return e.type!=='presscheck';});
+  entries.push(entry);
+  persist();
+  ['pc-press1-job1','pc-press1-job2','pc-press1-job3','pc-press1-oven',
+   'pc-press2-job1','pc-press2-job2','pc-press2-job3','pc-press2-oven'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  closeSheet('presscheck');showTab('entries');
+}
+
+function deleteEntry(id){entries=entries.filter(function(e){return e.id!==id;});persist();}
+function deleteMorning(id){morningRounds=morningRounds.filter(function(r){return r.id!==id;});persistMorning();}
+function confirmClear(){
+  if(!entries.length&&!morningRounds.length){alert('Nothing to clear.');return;}
+  var cfg=DEPT_DATA[activeDept]||DEPT_DATA.mur1;
+  if(confirm('Delete all entries and morning checks for '+cfg.badgeText+'?')){entries=[];morningRounds=[];persist();persistMorning();}
+}
+
+function doExport(){
+  if(!entries.length&&!morningRounds.length){alert('Nothing to export yet.');return;}
+  var cfg=DEPT_DATA[activeDept]||DEPT_DATA.mur1;
+  var dateKey=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+  var payload={date:dateKey,dept:activeDept,deptLabel:cfg.badgeText,exportedAt:new Date().toISOString(),supervisor:'Luis Galindo',entries:entries,morningRounds:morningRounds};
+  var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download='PennFloor_'+cfg.badgeText.replace('/','_')+'_'+dateKey+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  // Auto-clear after export so app is fresh for next round
+  setTimeout(function(){
+    entries=[];morningRounds=[];
+    persist();persistMorning();
+    showTab('log');
+  },800);
+}
+
+function doExportBoth(){
+  var mur1Entries=JSON.parse(localStorage.getItem('penn_floor_v3_mur1')||'[]');
+  var mur1Morning=JSON.parse(localStorage.getItem('penn_morning_v3_mur1')||'[]');
+  var mur25Entries=JSON.parse(localStorage.getItem('penn_floor_v3_mur25')||'[]');
+  var mur25Morning=JSON.parse(localStorage.getItem('penn_morning_v3_mur25')||'[]');
+  if(!mur1Entries.length&&!mur1Morning.length&&!mur25Entries.length&&!mur25Morning.length){alert('Nothing to export in either department.');return;}
+  var dateKey=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+  var payload={
+    date:dateKey,exportedAt:new Date().toISOString(),supervisor:'Luis Galindo',
+    mur1:{entries:mur1Entries,morningRounds:mur1Morning,dept:'mur1',deptLabel:'MUR1'},
+    mur25:{entries:mur25Entries,morningRounds:mur25Morning,dept:'mur25',deptLabel:'MUR2/5'}
+  };
+  var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download='PennFloor_BOTH_'+dateKey+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  // Auto-clear both after export
+  setTimeout(function(){
+    entries=[];morningRounds=[];
+    localStorage.setItem('penn_floor_v3_mur1','[]');localStorage.setItem('penn_morning_v3_mur1','[]');
+    localStorage.setItem('penn_floor_v3_mur25','[]');localStorage.setItem('penn_morning_v3_mur25','[]');
+    persist();persistMorning();showTab('log');
+  },800);
+}
+
+function pad(n){return n<10?'0'+n:String(n);}
+
+function showTab(name){
+  ['log','morning','entries','export','settings'].forEach(function(t){
+    document.getElementById('page-'+t).classList.add('hidden');
+    document.getElementById('tab-btn-'+t).classList.remove('active');
+  });
+  document.getElementById('page-'+name).classList.remove('hidden');
+  document.getElementById('tab-btn-'+name).classList.add('active');
+  if(name==='export')renderExport();
+  if(name==='settings')buildStationSettings();
+}
+
+// -- Station Settings ----------------------------------------------------------
+function getCustomStationsKey(){return 'penn_stations_'+(activeDept||'mur1');}
+
+function getStations(){
+  var saved=localStorage.getItem(getCustomStationsKey());
+  if(saved){try{return JSON.parse(saved);}catch(e){}}
+  return STATIONS.slice();
+}
+
+function saveStations(list){
+  localStorage.setItem(getCustomStationsKey(),JSON.stringify(list));
+  STATIONS=list;
+  buildStationGrids();
+  buildEmpSelect();
+}
+
+function buildStationSettings(){
+  var cfg=DEPT_DATA[activeDept]||DEPT_DATA.mur1;
+  var el=document.getElementById('set-dept-name');
+  if(el)el.textContent=cfg.label;
+  var list=getStations();
+  var container=document.getElementById('station-list');
+  if(!container)return;
+  container.innerHTML='';
+  list.forEach(function(st,i){
+    var div=document.createElement('div');
+    div.className='st-list-item';
+    div.innerHTML='<span style="font-size:16px;color:var(--gray);cursor:grab">☰</span>'+
+      '<input type="text" value="'+escH(st)+'" onblur="renameStation('+i+', this.value)" onkeydown="if(event.key===\'Enter\')this.blur()">'+
+      '<button class="st-del-btn" onclick="deleteStation('+i+')">×</button>';
+    container.appendChild(div);
+  });
+}
+
+function renameStation(i, newName){
+  newName=newName.trim();
+  if(!newName)return buildStationSettings();
+  var list=getStations();
+  if(list[i]===newName)return;
+  list[i]=newName;
+  saveStations(list);
+  buildStationSettings();
+}
+
+function deleteStation(i){
+  var list=getStations();
+  if(!confirm('Remove "'+list[i]+'"?'))return;
+  list.splice(i,1);
+  saveStations(list);
+  buildStationSettings();
+}
+
+function addStation(){
+  var input=document.getElementById('new-station-input');
+  var name=input.value.trim().toUpperCase();
+  if(!name)return;
+  var list=getStations();
+  if(list.indexOf(name)>=0){alert('Station already exists.');return;}
+  list.push(name);
+  saveStations(list);
+  input.value='';
+  buildStationSettings();
+}
+
+function openSheet(name){
+  document.getElementById('overlay-'+name).classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  if(name==='morning'){
+    var wrap=document.getElementById('mr-jobs-wrap');
+    if(wrap){
+      if(activeDept==='mur1'){
+        wrap.innerHTML=
+          '<input class="tinput sm" type="text" id="mr-job1" placeholder="Job 1 — Part # or description..." style="margin-bottom:6px">'+
+          '<input class="tinput sm" type="text" id="mr-job2" placeholder="Job 2" style="margin-bottom:6px">'+
+          '<input class="tinput sm" type="text" id="mr-job3" placeholder="Job 3">';
+      }else{
+        wrap.innerHTML='<textarea class="tinput sm" id="mr-jobs" rows="3" placeholder="One job per line..." style="min-height:54px;resize:vertical"></textarea>';
+      }
+    }
+  }
+}
+function closeSheet(name){document.getElementById('overlay-'+name).classList.add('hidden');document.body.style.overflow='';}
+
+['downtime','note','coaching','safety','morning','presscheck'].forEach(function(name){
+  var overlay=document.getElementById('overlay-'+name);
+  if(!overlay)return;
+  overlay.addEventListener('click',function(e){if(e.target===overlay)closeSheet(name);});
+});
+</script>
+</body>
+</html>
